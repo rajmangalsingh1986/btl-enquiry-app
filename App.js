@@ -1,20 +1,24 @@
+import React, { useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthProvider } from './src/context/AuthContext';
+import { NetworkProvider } from './src/context/NetworkContext';
+import RootNavigator from './src/navigation/RootNavigator';
+import { syncPendingEnquiries } from './src/utils/sync';
 
 export default function App() {
+  const onReconnect = useCallback(() => {
+    syncPendingEnquiries();
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <NetworkProvider onReconnect={onReconnect}>
+          <RootNavigator />
+          <StatusBar style="auto" />
+        </NetworkProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
