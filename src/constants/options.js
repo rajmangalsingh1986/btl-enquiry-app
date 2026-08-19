@@ -46,4 +46,7 @@ export const ROLE_LABELS = {
   CRE: 'Customer Relationship Executive',
   SM: 'Sales Manager',
   ASM: 'Area Sales Manager',
+  ADMIN: 'Admin',
 };
+
+export const USER_ROLE_OPTIONS = ['SC', 'CRE', 'SM', 'ASM', 'ADMIN'];

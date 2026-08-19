@@ -9,6 +9,7 @@ import LoginScreen from '../screens/LoginScreen';
 import SCHomeScreen from '../screens/sc/SCHomeScreen';
 import QueueScreen from '../screens/QueueScreen';
 import EnquiryDetailScreen from '../screens/EnquiryDetailScreen';
+import AdminHomeScreen from '../screens/admin/AdminHomeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +35,7 @@ function OfflineDot() {
 
 function HomeScreenForRole({ role, navigation }) {
   if (role === 'SC') return <SCHomeScreen navigation={navigation} />;
+  if (role === 'ADMIN') return <AdminHomeScreen navigation={navigation} />;
   return <QueueScreen navigation={navigation} />;
 }
 
