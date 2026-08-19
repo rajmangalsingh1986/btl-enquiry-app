@@ -57,6 +57,24 @@ export default function DealershipsScreen() {
     }
   };
 
+  const handleDelete = (d) => {
+    Alert.alert('Delete dealership', `Delete ${d.name}? This can't be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await client.delete(`/dealerships/${d.id}`);
+            await load();
+          } catch (err) {
+            Alert.alert('Error', err.response?.data?.error || 'Could not delete dealership.');
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <ScrollView
       style={styles.container}
@@ -83,6 +101,11 @@ export default function DealershipsScreen() {
           {d.location || d.state ? (
             <Text style={styles.cardSubtitle}>{[d.location, d.state].filter(Boolean).join(', ')}</Text>
           ) : null}
+          <View style={styles.cardActionRow}>
+            <TouchableOpacity style={styles.cardActionButton} onPress={() => handleDelete(d)}>
+              <Text style={styles.cardActionTextDestructive}>Delete</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ))}
     </ScrollView>
@@ -119,5 +142,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
   cardSubtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  cardActionRow: { flexDirection: 'row', gap: 16, marginTop: 10 },
+  cardActionButton: { paddingVertical: 4 },
+  cardActionTextDestructive: { color: '#DC2626', fontSize: 13, fontWeight: '600' },
   empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 10, marginBottom: 10 },
 });

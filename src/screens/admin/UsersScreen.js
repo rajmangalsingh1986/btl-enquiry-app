@@ -9,21 +9,29 @@ import { ROLE_LABELS, USER_ROLE_OPTIONS } from '../../constants/options';
 
 const ROLE_LABEL_OPTIONS = USER_ROLE_OPTIONS.map((code) => ROLE_LABELS[code]);
 
+const emptyFormState = {
+  name: '',
+  username: '',
+  password: '',
+  roleLabel: '',
+  dealershipName: '',
+};
+
 export default function UsersScreen() {
   const [users, setUsers] = useState([]);
   const [dealerships, setDealerships] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [roleLabel, setRoleLabel] = useState('');
-  const [dealershipName, setDealershipName] = useState('');
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [form, setForm] = useState(emptyFormState);
   const [submitting, setSubmitting] = useState(false);
 
-  const roleCode = USER_ROLE_OPTIONS.find((code) => ROLE_LABELS[code] === roleLabel) || '';
+  const roleCode = USER_ROLE_OPTIONS.find((code) => ROLE_LABELS[code] === form.roleLabel) || '';
   const needsDealership = roleCode && roleCode !== 'ADMIN';
+  const isEditing = editingUserId !== null;
+
+  const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,7 +56,7 @@ export default function UsersScreen() {
   );
 
   useEffect(() => {
-    if (!needsDealership) setDealershipName('');
+    if (!needsDealership) update('dealershipName', '');
   }, [needsDealership]);
 
   const onRefresh = async () => {
@@ -57,39 +65,76 @@ export default function UsersScreen() {
     setRefreshing(false);
   };
 
-  const handleAdd = async () => {
-    if (!name.trim() || !username.trim() || !password || !roleCode) {
+  const startEdit = (u) => {
+    setEditingUserId(u.id);
+    setForm({
+      name: u.name,
+      username: u.username,
+      password: '',
+      roleLabel: ROLE_LABELS[u.role] || '',
+      dealershipName: u.dealership?.name || '',
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingUserId(null);
+    setForm(emptyFormState);
+  };
+
+  const handleSubmit = async () => {
+    if (!form.name.trim() || !form.username.trim() || (!isEditing && !form.password) || !roleCode) {
       Alert.alert('Missing information', 'Name, username, password, and role are all required.');
       return;
     }
-    if (needsDealership && !dealershipName) {
+    if (needsDealership && !form.dealershipName) {
       Alert.alert('Missing information', 'Please select a dealership for this role.');
       return;
     }
 
-    const dealership = dealerships.find((d) => d.name === dealershipName);
+    const dealership = dealerships.find((d) => d.name === form.dealershipName);
+    const payload = {
+      name: form.name.trim(),
+      username: form.username.trim(),
+      role: roleCode,
+      dealershipId: dealership?.id,
+    };
+    if (form.password) payload.password = form.password;
 
     setSubmitting(true);
     try {
-      await client.post('/users', {
-        name: name.trim(),
-        username: username.trim(),
-        password,
-        role: roleCode,
-        dealershipId: dealership?.id,
-      });
-      setName('');
-      setUsername('');
-      setPassword('');
-      setRoleLabel('');
-      setDealershipName('');
+      if (isEditing) {
+        await client.patch(`/users/${editingUserId}`, payload);
+      } else {
+        payload.password = form.password;
+        await client.post('/users', payload);
+      }
+      cancelEdit();
       await load();
-      Alert.alert('Success', 'User added.');
+      Alert.alert('Success', isEditing ? 'User updated.' : 'User added.');
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.error || 'Could not add user.');
+      Alert.alert('Error', err.response?.data?.error || 'Could not save user.');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleDelete = (u) => {
+    Alert.alert('Delete user', `Delete ${u.name} (@${u.username})? This can't be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await client.delete(`/users/${u.id}`);
+            if (editingUserId === u.id) cancelEdit();
+            await load();
+          } catch (err) {
+            Alert.alert('Error', err.response?.data?.error || 'Could not delete user.');
+          }
+        },
+      },
+    ]);
   };
 
   return (
@@ -100,24 +145,38 @@ export default function UsersScreen() {
       keyboardShouldPersistTaps="handled"
     >
       <View style={styles.formCard}>
-        <Text style={styles.sectionTitle}>Add User</Text>
-        <LabeledInput label="Name" required value={name} onChangeText={setName} placeholder="Full name" />
-        <LabeledInput label="Username" required value={username} onChangeText={setUsername} placeholder="Login username" autoCapitalize="none" />
-        <LabeledInput label="Password" required value={password} onChangeText={setPassword} placeholder="Initial password" secureTextEntry />
-        <ChipSelect label="Role *" options={ROLE_LABEL_OPTIONS} value={roleLabel} onChange={setRoleLabel} />
+        <Text style={styles.sectionTitle}>{isEditing ? 'Edit User' : 'Add User'}</Text>
+        <LabeledInput label="Name" required value={form.name} onChangeText={(v) => update('name', v)} placeholder="Full name" />
+        <LabeledInput label="Username" required value={form.username} onChangeText={(v) => update('username', v)} placeholder="Login username" autoCapitalize="none" />
+        <LabeledInput
+          label={isEditing ? 'New Password' : 'Password'}
+          required={!isEditing}
+          value={form.password}
+          onChangeText={(v) => update('password', v)}
+          placeholder={isEditing ? 'Leave blank to keep current' : 'Initial password'}
+          secureTextEntry
+        />
+        <ChipSelect label="Role *" options={ROLE_LABEL_OPTIONS} value={form.roleLabel} onChange={(v) => update('roleLabel', v)} />
         {needsDealership ? (
           <Dropdown
             label="Dealership"
             required
-            value={dealershipName}
-            onChange={setDealershipName}
+            value={form.dealershipName}
+            onChange={(v) => update('dealershipName', v)}
             options={dealerships.map((d) => d.name)}
             placeholder="Select dealership"
           />
         ) : null}
-        <TouchableOpacity style={styles.submitButton} onPress={handleAdd} disabled={submitting}>
-          {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>Add User</Text>}
-        </TouchableOpacity>
+        <View style={styles.formButtonRow}>
+          {isEditing ? (
+            <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit} disabled={submitting}>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit} disabled={submitting}>
+            {submitting ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitButtonText}>{isEditing ? 'Save Changes' : 'Add User'}</Text>}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Text style={styles.sectionTitle}>Existing Users</Text>
@@ -133,6 +192,14 @@ export default function UsersScreen() {
           </View>
           <Text style={styles.cardSubtitle}>@{u.username}</Text>
           {u.dealership ? <Text style={styles.cardSubtitle}>{u.dealership.name}</Text> : null}
+          <View style={styles.cardActionRow}>
+            <TouchableOpacity style={styles.cardActionButton} onPress={() => startEdit(u)}>
+              <Text style={styles.cardActionText}>Edit</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cardActionButton} onPress={() => handleDelete(u)}>
+              <Text style={styles.cardActionTextDestructive}>Delete</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       ))}
     </ScrollView>
@@ -151,14 +218,23 @@ const styles = StyleSheet.create({
     borderColor: '#E5E7EB',
   },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 },
+  formButtonRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
   submitButton: {
+    flex: 1,
     backgroundColor: '#1D4ED8',
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 4,
   },
   submitButtonText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  cancelButtonText: { color: '#374151', fontSize: 16, fontWeight: '700' },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -172,5 +248,9 @@ const styles = StyleSheet.create({
   cardSubtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
   roleBadge: { backgroundColor: '#1D4ED8', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10, marginLeft: 8 },
   roleBadgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  cardActionRow: { flexDirection: 'row', gap: 16, marginTop: 10 },
+  cardActionButton: { paddingVertical: 4 },
+  cardActionText: { color: '#1D4ED8', fontSize: 13, fontWeight: '600' },
+  cardActionTextDestructive: { color: '#DC2626', fontSize: 13, fontWeight: '600' },
   empty: { textAlign: 'center', color: '#9CA3AF', marginTop: 10, marginBottom: 10 },
 });
