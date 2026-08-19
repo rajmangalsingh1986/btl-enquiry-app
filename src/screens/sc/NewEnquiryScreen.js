@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ScrollView,
   View,
@@ -9,21 +9,16 @@ import {
   Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import LabeledInput from '../../components/LabeledInput';
 import ChipSelect from '../../components/ChipSelect';
-import Dropdown from '../../components/Dropdown';
 import SegmentedControl from '../../components/SegmentedControl';
 import { SEGMENT_OPTIONS, PROFILE_OPTIONS_BY_SEGMENT } from '../../constants/options';
 import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
 import { saveLocalEnquiry } from '../../db/localDb';
 import { syncPendingEnquiries } from '../../utils/sync';
-import client from '../../api/client';
-
-const DEALERSHIPS_CACHE_KEY = 'btl-dealerships-cache';
 
 const emptyForm = (user) => ({
   activityName: '',
@@ -47,27 +42,6 @@ export default function NewEnquiryScreen() {
   const [form, setForm] = useState(emptyForm(user));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [dealershipOptions, setDealershipOptions] = useState(user?.dealershipName ? [user.dealershipName] : []);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await client.get('/dealerships');
-        const names = data.map((d) => d.name);
-        setDealershipOptions(names);
-        await AsyncStorage.setItem(DEALERSHIPS_CACHE_KEY, JSON.stringify(names));
-      } catch (err) {
-        // Offline or request failed - fall back to a cached list from the last
-        // successful fetch, so the dropdown still works without connectivity.
-        try {
-          const cached = await AsyncStorage.getItem(DEALERSHIPS_CACHE_KEY);
-          if (cached) setDealershipOptions(JSON.parse(cached));
-        } catch (cacheErr) {
-          // keep whatever was already in state (at minimum the user's own dealership)
-        }
-      }
-    })();
-  }, []);
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
@@ -157,7 +131,12 @@ export default function NewEnquiryScreen() {
         ) : null}
       </View>
 
-      <Dropdown label="Dealership Name" required value={form.dealershipName} onChange={(v) => update('dealershipName', v)} options={dealershipOptions} placeholder="Select dealership" />
+      <View style={styles.fieldGroup}>
+        <Text style={styles.label}>Dealership Name</Text>
+        <View style={styles.readOnlyField}>
+          <Text style={styles.readOnlyFieldText}>{form.dealershipName}</Text>
+        </View>
+      </View>
 
       <LabeledInput label="Customer Name" required value={form.customerName} onChangeText={(v) => update('customerName', v)} placeholder="Customer's full name" />
       <LabeledInput label="Contact No." required value={form.contactNo} onChangeText={(v) => update('contactNo', v.replace(/[^0-9]/g, ''))} placeholder="10-digit mobile number" keyboardType="number-pad" maxLength={10} />
@@ -210,6 +189,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   dateButtonText: { fontSize: 15, color: '#111827' },
+  readOnlyField: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: '#F3F4F6',
+  },
+  readOnlyFieldText: { fontSize: 15, color: '#374151' },
   submitButton: {
     backgroundColor: '#1D4ED8',
     borderRadius: 8,
