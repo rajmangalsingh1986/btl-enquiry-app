@@ -1,8 +1,9 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import LabeledInput from '../../components/LabeledInput';
 import client from '../../api/client';
+import { confirmAction, notify } from '../../utils/confirm';
 
 export default function DealershipsScreen() {
   const [dealerships, setDealerships] = useState([]);
@@ -39,7 +40,7 @@ export default function DealershipsScreen() {
 
   const handleAdd = async () => {
     if (!name.trim()) {
-      Alert.alert('Missing information', 'Dealership name is required.');
+      notify('Missing information', 'Dealership name is required.');
       return;
     }
     setSubmitting(true);
@@ -49,30 +50,23 @@ export default function DealershipsScreen() {
       setLocation('');
       setState('');
       await load();
-      Alert.alert('Success', 'Dealership added.');
+      notify('Success', 'Dealership added.');
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.error || 'Could not add dealership.');
+      notify('Error', err.response?.data?.error || 'Could not add dealership.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = (d) => {
-    Alert.alert('Delete dealership', `Delete ${d.name}? This can't be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await client.delete(`/dealerships/${d.id}`);
-            await load();
-          } catch (err) {
-            Alert.alert('Error', err.response?.data?.error || 'Could not delete dealership.');
-          }
-        },
-      },
-    ]);
+    confirmAction('Delete dealership', `Delete ${d.name}? This can't be undone.`, async () => {
+      try {
+        await client.delete(`/dealerships/${d.id}`);
+        await load();
+      } catch (err) {
+        notify('Error', err.response?.data?.error || 'Could not delete dealership.');
+      }
+    });
   };
 
   return (

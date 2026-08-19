@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, RefreshControl } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import LabeledInput from '../../components/LabeledInput';
 import ChipSelect from '../../components/ChipSelect';
 import Dropdown from '../../components/Dropdown';
 import client from '../../api/client';
 import { ROLE_LABELS, USER_ROLE_OPTIONS } from '../../constants/options';
+import { confirmAction, notify } from '../../utils/confirm';
 
 const ROLE_LABEL_OPTIONS = USER_ROLE_OPTIONS.map((code) => ROLE_LABELS[code]);
 
@@ -83,11 +84,11 @@ export default function UsersScreen() {
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.username.trim() || (!isEditing && !form.password) || !roleCode) {
-      Alert.alert('Missing information', 'Name, username, password, and role are all required.');
+      notify('Missing information', 'Name, username, password, and role are all required.');
       return;
     }
     if (needsDealership && !form.dealershipName) {
-      Alert.alert('Missing information', 'Please select a dealership for this role.');
+      notify('Missing information', 'Please select a dealership for this role.');
       return;
     }
 
@@ -110,31 +111,24 @@ export default function UsersScreen() {
       }
       cancelEdit();
       await load();
-      Alert.alert('Success', isEditing ? 'User updated.' : 'User added.');
+      notify('Success', isEditing ? 'User updated.' : 'User added.');
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.error || 'Could not save user.');
+      notify('Error', err.response?.data?.error || 'Could not save user.');
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = (u) => {
-    Alert.alert('Delete user', `Delete ${u.name} (@${u.username})? This can't be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await client.delete(`/users/${u.id}`);
-            if (editingUserId === u.id) cancelEdit();
-            await load();
-          } catch (err) {
-            Alert.alert('Error', err.response?.data?.error || 'Could not delete user.');
-          }
-        },
-      },
-    ]);
+    confirmAction('Delete user', `Delete ${u.name} (@${u.username})? This can't be undone.`, async () => {
+      try {
+        await client.delete(`/users/${u.id}`);
+        if (editingUserId === u.id) cancelEdit();
+        await load();
+      } catch (err) {
+        notify('Error', err.response?.data?.error || 'Could not delete user.');
+      }
+    });
   };
 
   return (

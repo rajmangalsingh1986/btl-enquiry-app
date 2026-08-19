@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Platform,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNetwork } from '../../context/NetworkContext';
 import { saveLocalEnquiry } from '../../db/localDb';
 import { syncPendingEnquiries } from '../../utils/sync';
+import { notify } from '../../utils/confirm';
 
 const emptyForm = (user) => ({
   activityName: '',
@@ -72,7 +72,7 @@ export default function NewEnquiryScreen() {
   const handleSubmit = async () => {
     const validationError = validate();
     if (validationError) {
-      Alert.alert('Missing information', validationError);
+      notify('Missing information', validationError);
       return;
     }
 
@@ -89,14 +89,14 @@ export default function NewEnquiryScreen() {
       const result = isOnline ? await syncPendingEnquiries() : { synced: 0 };
 
       setForm(emptyForm(user));
-      Alert.alert(
+      notify(
         'Enquiry captured',
         result.synced > 0
           ? 'Saved and sent to the Customer Relationship Executive.'
           : "Saved on this device. It will sync automatically once you're back online."
       );
     } catch (err) {
-      Alert.alert('Error', 'Could not save the enquiry. Please try again.');
+      notify('Error', 'Could not save the enquiry. Please try again.');
     } finally {
       setSubmitting(false);
     }

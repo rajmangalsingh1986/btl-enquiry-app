@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import EnquiryFields from '../components/EnquiryFields';
 import StageTimeline from '../components/StageTimeline';
 import ChipSelect from '../components/ChipSelect';
 import LabeledInput from '../components/LabeledInput';
 import { useAuth } from '../context/AuthContext';
 import client from '../api/client';
+import { notify } from '../utils/confirm';
 import {
   CRE_VALIDATION_OPTIONS,
   CRE_TAG_OPTIONS,
@@ -21,7 +22,7 @@ function CreForm({ enquiry, onDone }) {
 
   const submit = async () => {
     if (!validation || !tag) {
-      Alert.alert('Missing information', 'Please select a validation result and a lead tag.');
+      notify('Missing information', 'Please select a validation result and a lead tag.');
       return;
     }
     setSubmitting(true);
@@ -29,7 +30,7 @@ function CreForm({ enquiry, onDone }) {
       await client.patch(`/enquiries/${enquiry.id}/cre`, { validation, tag, remarks });
       onDone();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.error || 'Could not submit. Please try again.');
+      notify('Error', err.response?.data?.error || 'Could not submit. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -53,7 +54,7 @@ function SmForm({ enquiry, onDone }) {
 
   const submit = async () => {
     if (!status) {
-      Alert.alert('Missing information', 'Please select a current status.');
+      notify('Missing information', 'Please select a current status.');
       return;
     }
     setSubmitting(true);
@@ -61,7 +62,7 @@ function SmForm({ enquiry, onDone }) {
       await client.patch(`/enquiries/${enquiry.id}/sm`, { status, remarks });
       onDone();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.error || 'Could not submit. Please try again.');
+      notify('Error', err.response?.data?.error || 'Could not submit. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -84,7 +85,7 @@ function AsmForm({ enquiry, onDone }) {
 
   const submit = async () => {
     if (!status) {
-      Alert.alert('Missing information', 'Please select a final status.');
+      notify('Missing information', 'Please select a final status.');
       return;
     }
     setSubmitting(true);
@@ -92,7 +93,7 @@ function AsmForm({ enquiry, onDone }) {
       await client.patch(`/enquiries/${enquiry.id}/asm`, { status, remarks });
       onDone();
     } catch (err) {
-      Alert.alert('Error', err.response?.data?.error || 'Could not submit. Please try again.');
+      notify('Error', err.response?.data?.error || 'Could not submit. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -124,7 +125,7 @@ export default function EnquiryDetailScreen({ route, navigation }) {
     // Navigate immediately rather than waiting on the alert's button press -
     // Alert.alert is a no-op on web, so gating navigation behind its
     // callback would silently strand the user on this screen there.
-    Alert.alert('Success', 'Enquiry updated.');
+    notify('Success', 'Enquiry updated.');
     navigation.goBack();
   };
 
