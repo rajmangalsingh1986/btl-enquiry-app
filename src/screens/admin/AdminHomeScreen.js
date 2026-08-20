@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import AdminDashboardScreen from './AdminDashboardScreen';
 import DealershipsScreen from './DealershipsScreen';
 import UsersScreen from './UsersScreen';
 
-const TAB_LABELS = { dealerships: 'Dealerships', users: 'Users' };
+const TAB_LABELS = { dashboard: 'Dashboard', dealerships: 'Dealerships', users: 'Users' };
+
+const TAB_SCREENS = {
+  dashboard: AdminDashboardScreen,
+  dealerships: DealershipsScreen,
+  users: UsersScreen,
+};
 
 export default function AdminHomeScreen() {
-  const [tab, setTab] = useState('dealerships');
+  const [tab, setTab] = useState('dashboard');
+  const ActiveScreen = TAB_SCREENS[tab];
 
   return (
     <View style={styles.container}>
@@ -22,7 +30,7 @@ export default function AdminHomeScreen() {
         ))}
       </View>
 
-      {tab === 'dealerships' ? <DealershipsScreen /> : <UsersScreen />}
+      <ActiveScreen />
     </View>
   );
 }
