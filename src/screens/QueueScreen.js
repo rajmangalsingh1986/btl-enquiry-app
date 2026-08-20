@@ -4,8 +4,9 @@ import { useFocusEffect } from '@react-navigation/native';
 import EnquiryCard from '../components/EnquiryCard';
 import client from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import PersonalDashboardScreen from './PersonalDashboardScreen';
 
-const TAB_LABELS = { pending: 'Pending', history: 'My History' };
+const TAB_LABELS = { pending: 'Pending', history: 'My History', dashboard: 'Dashboard' };
 
 export default function QueueScreen({ navigation }) {
   const { user } = useAuth();
@@ -29,7 +30,7 @@ export default function QueueScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
-      load(tab);
+      if (tab !== 'dashboard') load(tab);
     }, [tab, load])
   );
 
@@ -53,23 +54,27 @@ export default function QueueScreen({ navigation }) {
         ))}
       </View>
 
-      <FlatList
-        data={enquiries}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.list}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        ListEmptyComponent={
-          <Text style={styles.empty}>
-            {loading ? 'Loading...' : tab === 'pending' ? `No enquiries waiting for ${user.role} action.` : 'No history yet.'}
-          </Text>
-        }
-        renderItem={({ item }) => (
-          <EnquiryCard
-            enquiry={item}
-            onPress={() => navigation.navigate('EnquiryDetail', { enquiry: item, mode: tab === 'pending' ? 'tag' : 'view' })}
-          />
-        )}
-      />
+      {tab === 'dashboard' ? (
+        <PersonalDashboardScreen />
+      ) : (
+        <FlatList
+          data={enquiries}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          ListEmptyComponent={
+            <Text style={styles.empty}>
+              {loading ? 'Loading...' : tab === 'pending' ? `No enquiries waiting for ${user.role} action.` : 'No history yet.'}
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <EnquiryCard
+              enquiry={item}
+              onPress={() => navigation.navigate('EnquiryDetail', { enquiry: item, mode: tab === 'pending' ? 'tag' : 'view' })}
+            />
+          )}
+        />
+      )}
     </View>
   );
 }

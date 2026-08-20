@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import NewEnquiryScreen from './NewEnquiryScreen';
 import MyEnquiriesScreen from './MyEnquiriesScreen';
+import PersonalDashboardScreen from '../PersonalDashboardScreen';
 
-const TAB_LABELS = { new: 'New Enquiry', mine: 'My Enquiries' };
+const TAB_LABELS = { new: 'New Enquiry', mine: 'My Enquiries', dashboard: 'Dashboard' };
 
 export default function SCHomeScreen({ navigation }) {
   const [tab, setTab] = useState('new');
@@ -22,7 +23,9 @@ export default function SCHomeScreen({ navigation }) {
         ))}
       </View>
 
-      {tab === 'new' ? <NewEnquiryScreen /> : <MyEnquiriesScreen navigation={navigation} />}
+      {tab === 'new' ? <NewEnquiryScreen /> : null}
+      {tab === 'mine' ? <MyEnquiriesScreen navigation={navigation} /> : null}
+      {tab === 'dashboard' ? <PersonalDashboardScreen /> : null}
     </View>
   );
 }

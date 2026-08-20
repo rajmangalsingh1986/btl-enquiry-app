@@ -4,41 +4,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import client from '../../api/client';
 import { downloadCsv } from '../../utils/downloadCsv';
 import { notify } from '../../utils/confirm';
+import { countBy } from '../../utils/stats';
+import StatCard from '../../components/StatCard';
+import BreakdownList from '../../components/BreakdownList';
 import { STAGE_LABELS } from '../../constants/options';
-
-function StatCard({ label, value }) {
-  return (
-    <View style={styles.statCard}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
-function BreakdownList({ title, entries }) {
-  if (!entries.length) return null;
-  return (
-    <View style={styles.card}>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      {entries.map(([label, count]) => (
-        <View key={label} style={styles.breakdownRow}>
-          <Text style={styles.breakdownLabel}>{label}</Text>
-          <Text style={styles.breakdownValue}>{count}</Text>
-        </View>
-      ))}
-    </View>
-  );
-}
-
-function countBy(items, keyFn) {
-  const counts = {};
-  for (const item of items) {
-    const key = keyFn(item);
-    if (!key) continue;
-    counts[key] = (counts[key] || 0) + 1;
-  }
-  return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-}
 
 const ENQUIRY_CSV_HEADERS = {
   id: 'ID',
@@ -187,17 +156,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   content: { padding: 16, paddingBottom: 40 },
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  statCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  statValue: { fontSize: 24, fontWeight: '800', color: '#1D4ED8' },
-  statLabel: { fontSize: 12, color: '#6B7280', marginTop: 4, textAlign: 'center' },
   exportButton: {
     backgroundColor: '#1D4ED8',
     borderRadius: 8,
@@ -206,22 +164,4 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   exportButtonText: { color: '#fff', fontSize: 15, fontWeight: '700' },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 10 },
-  breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  breakdownLabel: { fontSize: 13, color: '#374151' },
-  breakdownValue: { fontSize: 13, color: '#111827', fontWeight: '700' },
 });
