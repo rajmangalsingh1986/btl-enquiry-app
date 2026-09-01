@@ -44,7 +44,7 @@ export default function StageTimeline({ enquiry }) {
         ) : null}
       </Stage>
 
-      <Stage title="Area Sales Manager" active={!!enquiry.asm?.status}>
+      <Stage title="Final Tagging" active={!!enquiry.asm?.status}>
         {enquiry.asm?.status ? (
           <>
             <Detail label="Final Status" value={enquiry.asm.status} />

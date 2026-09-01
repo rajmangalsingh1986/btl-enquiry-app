@@ -4,6 +4,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import LabeledInput from '../../components/LabeledInput';
 import ChipSelect from '../../components/ChipSelect';
 import Dropdown from '../../components/Dropdown';
+import MultiChipSelect from '../../components/MultiChipSelect';
 import client from '../../api/client';
 import { ROLE_LABELS, USER_ROLE_OPTIONS } from '../../constants/options';
 import { confirmAction, notify } from '../../utils/confirm';
@@ -16,6 +17,7 @@ const emptyFormState = {
   password: '',
   roleLabel: '',
   dealershipName: '',
+  dealershipNames: [],
 };
 
 export default function UsersScreen() {
@@ -29,7 +31,8 @@ export default function UsersScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const roleCode = USER_ROLE_OPTIONS.find((code) => ROLE_LABELS[code] === form.roleLabel) || '';
-  const needsDealership = roleCode && roleCode !== 'ADMIN';
+  const needsSingleDealership = roleCode && roleCode !== 'ADMIN' && roleCode !== 'ASM';
+  const needsMultiDealership = roleCode === 'ASM';
   const isEditing = editingUserId !== null;
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
@@ -57,8 +60,9 @@ export default function UsersScreen() {
   );
 
   useEffect(() => {
-    if (!needsDealership) update('dealershipName', '');
-  }, [needsDealership]);
+    if (!needsSingleDealership) update('dealershipName', '');
+    if (!needsMultiDealership) update('dealershipNames', []);
+  }, [needsSingleDealership, needsMultiDealership]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -74,6 +78,7 @@ export default function UsersScreen() {
       password: '',
       roleLabel: ROLE_LABELS[u.role] || '',
       dealershipName: u.dealership?.name || '',
+      dealershipNames: (u.asmDealerships || []).map((d) => d.name),
     });
   };
 
@@ -87,17 +92,23 @@ export default function UsersScreen() {
       notify('Missing information', 'Name, username, password, and role are all required.');
       return;
     }
-    if (needsDealership && !form.dealershipName) {
+    if (needsSingleDealership && !form.dealershipName) {
       notify('Missing information', 'Please select a dealership for this role.');
+      return;
+    }
+    if (needsMultiDealership && form.dealershipNames.length === 0) {
+      notify('Missing information', 'Please select at least one dealership for this ASM.');
       return;
     }
 
     const dealership = dealerships.find((d) => d.name === form.dealershipName);
+    const dealershipIds = dealerships.filter((d) => form.dealershipNames.includes(d.name)).map((d) => d.id);
     const payload = {
       name: form.name.trim(),
       username: form.username.trim(),
       role: roleCode,
       dealershipId: dealership?.id,
+      dealershipIds,
     };
     if (form.password) payload.password = form.password;
 
@@ -151,7 +162,7 @@ export default function UsersScreen() {
           secureTextEntry
         />
         <ChipSelect label="Role *" options={ROLE_LABEL_OPTIONS} value={form.roleLabel} onChange={(v) => update('roleLabel', v)} />
-        {needsDealership ? (
+        {needsSingleDealership ? (
           <Dropdown
             label="Dealership"
             required
@@ -159,6 +170,14 @@ export default function UsersScreen() {
             onChange={(v) => update('dealershipName', v)}
             options={dealerships.map((d) => d.name)}
             placeholder="Select dealership"
+          />
+        ) : null}
+        {needsMultiDealership ? (
+          <MultiChipSelect
+            label="Dealerships in this ASM's area *"
+            values={form.dealershipNames}
+            onChange={(v) => update('dealershipNames', v)}
+            options={dealerships.map((d) => d.name)}
           />
         ) : null}
         <View style={styles.formButtonRow}>
@@ -186,6 +205,9 @@ export default function UsersScreen() {
           </View>
           <Text style={styles.cardSubtitle}>@{u.username}</Text>
           {u.dealership ? <Text style={styles.cardSubtitle}>{u.dealership.name}</Text> : null}
+          {u.asmDealerships && u.asmDealerships.length ? (
+            <Text style={styles.cardSubtitle}>{u.asmDealerships.map((d) => d.name).join(', ')}</Text>
+          ) : null}
           <View style={styles.cardActionRow}>
             <TouchableOpacity style={styles.cardActionButton} onPress={() => startEdit(u)}>
               <Text style={styles.cardActionText}>Edit</Text>

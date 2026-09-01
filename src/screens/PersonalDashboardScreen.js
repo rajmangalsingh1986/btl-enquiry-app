@@ -9,9 +9,10 @@ import BreakdownList from '../components/BreakdownList';
 import { STAGE_LABELS } from '../constants/options';
 
 // SC sees their own submitted enquiries (GET /enquiries, which the server
-// already scopes to createdById for role SC). CRE/SM/ASM see what they've
+// already scopes to createdById for role SC). CRE/SM see what they've
 // personally actioned (GET /enquiries/history, scoped server-side to their
-// own creUserId/smUserId/asmUserId) - not the dealership-wide queue.
+// own creUserId/smUserId) - not the dealership-wide queue. ASM has its own
+// dedicated screens (view/download-only, no personal-action history to show).
 const ROLE_CONFIG = {
   SC: {
     endpoint: '/enquiries',
@@ -30,14 +31,13 @@ const ROLE_CONFIG = {
     ],
   },
   SM: {
+    // SM now owns both the status tag and the final/closing tag.
     endpoint: '/enquiries/history',
     totalLabel: 'Enquiries Tagged',
-    breakdowns: [{ title: 'By Status', keyFn: (e) => e.sm?.status }],
-  },
-  ASM: {
-    endpoint: '/enquiries/history',
-    totalLabel: 'Enquiries Closed',
-    breakdowns: [{ title: 'By Final Status', keyFn: (e) => e.asm?.status }],
+    breakdowns: [
+      { title: 'By Status', keyFn: (e) => e.sm?.status },
+      { title: 'By Final Status', keyFn: (e) => e.asm?.status },
+    ],
   },
 };
 

@@ -73,12 +73,13 @@ function SmForm({ enquiry, onDone }) {
       <Text style={styles.sectionTitle}>Current Status Tagging</Text>
       <ChipSelect label="Status *" options={SM_STATUS_OPTIONS} value={status} onChange={setStatus} />
       <LabeledInput label="Remarks" value={remarks} onChangeText={setRemarks} placeholder="Optional notes" multiline />
-      <SubmitButton onPress={submit} submitting={submitting} label="Submit to ASM" />
+      <SubmitButton onPress={submit} submitting={submitting} label="Save Status" />
     </View>
   );
 }
 
-function AsmForm({ enquiry, onDone }) {
+// Final/closing tag - performed by SM (ASM is view/download-only).
+function FinalTagForm({ enquiry, onDone }) {
   const [status, setStatus] = useState('');
   const [remarks, setRemarks] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -129,19 +130,18 @@ export default function EnquiryDetailScreen({ route, navigation }) {
     navigation.goBack();
   };
 
-  const canTag =
-    mode === 'tag' &&
-    ((user.role === 'CRE' && enquiry.stage === 'CREATED') ||
-      (user.role === 'SM' && enquiry.stage === 'CRE_TAGGED') ||
-      (user.role === 'ASM' && enquiry.stage === 'SM_TAGGED'));
+  const canTagCre = mode === 'tag' && user.role === 'CRE' && enquiry.stage === 'CREATED';
+  // SM now owns both the status tag and the final/closing tag.
+  const canTagSmStatus = mode === 'tag' && user.role === 'SM' && enquiry.stage === 'CRE_TAGGED';
+  const canTagFinal = mode === 'tag' && user.role === 'SM' && enquiry.stage === 'SM_TAGGED';
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <EnquiryFields enquiry={enquiry} />
       <StageTimeline enquiry={enquiry} />
-      {canTag && user.role === 'CRE' && <CreForm enquiry={enquiry} onDone={onDone} />}
-      {canTag && user.role === 'SM' && <SmForm enquiry={enquiry} onDone={onDone} />}
-      {canTag && user.role === 'ASM' && <AsmForm enquiry={enquiry} onDone={onDone} />}
+      {canTagCre && <CreForm enquiry={enquiry} onDone={onDone} />}
+      {canTagSmStatus && <SmForm enquiry={enquiry} onDone={onDone} />}
+      {canTagFinal && <FinalTagForm enquiry={enquiry} onDone={onDone} />}
     </ScrollView>
   );
 }

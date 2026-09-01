@@ -2,6 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import client from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { downloadCsv } from '../../utils/downloadCsv';
 import { notify } from '../../utils/confirm';
 import { countBy } from '../../utils/stats';
@@ -10,10 +11,12 @@ import StatCard from '../../components/StatCard';
 import BreakdownList from '../../components/BreakdownList';
 import { STAGE_LABELS } from '../../constants/options';
 
-export default function AdminDashboardScreen() {
+// Same shape as the Admin dashboard, but GET /enquiries here is already
+// scoped server-side to this ASM's assigned dealerships (their "area"),
+// and there's no dealership/user management to summarize.
+export default function AsmDashboardScreen() {
+  const { user } = useAuth();
   const [enquiries, setEnquiries] = useState([]);
-  const [dealershipCount, setDealershipCount] = useState(0);
-  const [userCount, setUserCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -21,14 +24,8 @@ export default function AdminDashboardScreen() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [enquiriesRes, dealershipsRes, usersRes] = await Promise.all([
-        client.get('/enquiries'),
-        client.get('/dealerships'),
-        client.get('/users'),
-      ]);
-      setEnquiries(enquiriesRes.data);
-      setDealershipCount(dealershipsRes.data.length);
-      setUserCount(usersRes.data.length);
+      const { data } = await client.get('/enquiries');
+      setEnquiries(data);
     } catch (err) {
       // keep last known data
     } finally {
@@ -78,8 +75,7 @@ export default function AdminDashboardScreen() {
 
       <View style={styles.statsRow}>
         <StatCard label="Total Enquiries" value={enquiries.length} />
-        <StatCard label="Dealerships" value={dealershipCount} />
-        <StatCard label="Users" value={userCount} />
+        <StatCard label="Dealerships in Area" value={(user.dealershipNames || []).length} />
       </View>
 
       <TouchableOpacity style={styles.exportButton} onPress={handleExport} disabled={exporting}>
