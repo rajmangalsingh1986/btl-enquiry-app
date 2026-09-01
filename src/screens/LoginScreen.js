@@ -40,7 +40,7 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>BTL Enquiry</Text>
+      <Text style={styles.title}>Sarpanch Ka Samman</Text>
       <Text style={styles.subtitle}>Sign in to capture and track enquiries</Text>
 
       <TextInput

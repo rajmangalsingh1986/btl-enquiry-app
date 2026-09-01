@@ -56,7 +56,7 @@ export default function RootNavigator() {
     <NavigationContainer>
       <Stack.Navigator screenOptions={{ headerRight: () => (user ? <LogoutButton /> : null) }}>
         {!user ? (
-          <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'BTL Enquiry', headerRight: undefined }} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Sarpanch Ka Samman', headerRight: undefined }} />
         ) : (
           <>
             <Stack.Screen
