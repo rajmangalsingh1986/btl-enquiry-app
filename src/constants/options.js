@@ -50,3 +50,8 @@ export const ROLE_LABELS = {
 };
 
 export const USER_ROLE_OPTIONS = ['SC', 'CRE', 'SM', 'ASM', 'ADMIN'];
+
+// CRE/SM only - which segment they're specialized in. "Both" means not
+// specialized (sees every segment); BEV-segment enquiries always route with
+// whoever is assigned "Personal".
+export const STAFF_SEGMENT_OPTIONS = ['Personal', 'Commercial', 'Both'];

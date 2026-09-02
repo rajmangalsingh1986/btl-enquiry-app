@@ -6,7 +6,7 @@ import ChipSelect from '../../components/ChipSelect';
 import Dropdown from '../../components/Dropdown';
 import MultiChipSelect from '../../components/MultiChipSelect';
 import client from '../../api/client';
-import { ROLE_LABELS, USER_ROLE_OPTIONS } from '../../constants/options';
+import { ROLE_LABELS, USER_ROLE_OPTIONS, STAFF_SEGMENT_OPTIONS } from '../../constants/options';
 import { confirmAction, notify } from '../../utils/confirm';
 
 const ROLE_LABEL_OPTIONS = USER_ROLE_OPTIONS.map((code) => ROLE_LABELS[code]);
@@ -18,6 +18,7 @@ const emptyFormState = {
   roleLabel: '',
   dealershipName: '',
   dealershipNames: [],
+  segmentLabel: 'Both',
 };
 
 export default function UsersScreen() {
@@ -33,6 +34,7 @@ export default function UsersScreen() {
   const roleCode = USER_ROLE_OPTIONS.find((code) => ROLE_LABELS[code] === form.roleLabel) || '';
   const needsSingleDealership = roleCode && roleCode !== 'ADMIN' && roleCode !== 'ASM';
   const needsMultiDealership = roleCode === 'ASM';
+  const needsSegment = roleCode === 'CRE' || roleCode === 'SM';
   const isEditing = editingUserId !== null;
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }));
@@ -62,7 +64,8 @@ export default function UsersScreen() {
   useEffect(() => {
     if (!needsSingleDealership) update('dealershipName', '');
     if (!needsMultiDealership) update('dealershipNames', []);
-  }, [needsSingleDealership, needsMultiDealership]);
+    if (!needsSegment) update('segmentLabel', 'Both');
+  }, [needsSingleDealership, needsMultiDealership, needsSegment]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -79,6 +82,7 @@ export default function UsersScreen() {
       roleLabel: ROLE_LABELS[u.role] || '',
       dealershipName: u.dealership?.name || '',
       dealershipNames: (u.asmDealerships || []).map((d) => d.name),
+      segmentLabel: u.segment || 'Both',
     });
   };
 
@@ -109,6 +113,7 @@ export default function UsersScreen() {
       role: roleCode,
       dealershipId: dealership?.id,
       dealershipIds,
+      segment: needsSegment && form.segmentLabel !== 'Both' ? form.segmentLabel : null,
     };
     if (form.password) payload.password = form.password;
 
@@ -180,6 +185,14 @@ export default function UsersScreen() {
             options={dealerships.map((d) => d.name)}
           />
         ) : null}
+        {needsSegment ? (
+          <ChipSelect
+            label="Segment"
+            options={STAFF_SEGMENT_OPTIONS}
+            value={form.segmentLabel}
+            onChange={(v) => update('segmentLabel', v)}
+          />
+        ) : null}
         <View style={styles.formButtonRow}>
           {isEditing ? (
             <TouchableOpacity style={styles.cancelButton} onPress={cancelEdit} disabled={submitting}>
@@ -208,6 +221,7 @@ export default function UsersScreen() {
           {u.asmDealerships && u.asmDealerships.length ? (
             <Text style={styles.cardSubtitle}>{u.asmDealerships.map((d) => d.name).join(', ')}</Text>
           ) : null}
+          {u.segment ? <Text style={styles.cardSubtitle}>{u.segment} segment</Text> : null}
           <View style={styles.cardActionRow}>
             <TouchableOpacity style={styles.cardActionButton} onPress={() => startEdit(u)}>
               <Text style={styles.cardActionText}>Edit</Text>
