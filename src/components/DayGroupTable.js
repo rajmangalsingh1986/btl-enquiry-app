@@ -23,10 +23,18 @@ function buildMatrix(enquiries, groupFn) {
   return { dates, groups, counts, groupTotals };
 }
 
-function Cell({ children, width, header, bold }) {
+function Cell({ children, width, header, bold, total }) {
   return (
-    <View style={[styles.cell, { width }, header && styles.headerCell]}>
-      <Text style={[styles.cellText, header && styles.headerCellText, bold && styles.boldCellText]} numberOfLines={1}>
+    <View style={[styles.cell, { width }, header && styles.headerCell, total && styles.totalCell]}>
+      <Text
+        style={[
+          styles.cellText,
+          header && styles.headerCellText,
+          bold && styles.boldCellText,
+          total && styles.totalCellText,
+        ]}
+        numberOfLines={1}
+      >
         {children}
       </Text>
     </View>
@@ -66,11 +74,11 @@ export default function DayGroupTable({ enquiries, groupFn, title, groupColWidth
           })}
 
           <View style={[styles.row, styles.totalRow]}>
-            <Cell width={DATE_COL_WIDTH} bold>Total</Cell>
+            <Cell width={DATE_COL_WIDTH} bold total>Total</Cell>
             {groups.map((g) => (
-              <Cell key={g} width={groupColWidth} bold>{groupTotals[g]}</Cell>
+              <Cell key={g} width={groupColWidth} bold total>{groupTotals[g]}</Cell>
             ))}
-            <Cell width={70} bold>{enquiries.length}</Cell>
+            <Cell width={70} bold total>{enquiries.length}</Cell>
           </View>
         </View>
       </ScrollView>
@@ -97,8 +105,10 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F3F4F6',
     justifyContent: 'center',
   },
-  headerCell: { backgroundColor: '#F9FAFB' },
+  headerCell: { backgroundColor: '#EFF6FF' },
+  totalCell: { backgroundColor: '#FFFBEB' },
   cellText: { fontSize: 12, color: '#374151' },
-  headerCellText: { fontWeight: '700', color: '#111827' },
+  headerCellText: { fontWeight: '700', color: '#1D4ED8' },
   boldCellText: { fontWeight: '700' },
+  totalCellText: { color: '#B45309' },
 });

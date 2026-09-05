@@ -27,10 +27,27 @@ function buildRows(enquiries) {
   return { rows, totals };
 }
 
-function Cell({ children, flex, header, bold }) {
+function Cell({ children, flex, header, bold, tint, total }) {
   return (
-    <View style={[styles.cell, { flex }, header && styles.headerCell]}>
-      <Text style={[styles.cellText, header && styles.headerCellText, bold && styles.boldCellText]} numberOfLines={1}>
+    <View
+      style={[
+        styles.cell,
+        { flex },
+        header && styles.headerCell,
+        total && styles.totalCell,
+        tint && styles[`${tint}Cell`],
+      ]}
+    >
+      <Text
+        style={[
+          styles.cellText,
+          header && styles.headerCellText,
+          bold && styles.boldCellText,
+          total && styles.totalCellText,
+          tint && styles[`${tint}Text`],
+        ]}
+        numberOfLines={1}
+      >
         {children}
       </Text>
     </View>
@@ -46,23 +63,23 @@ export default function DealershipVehicleTypeTable({ enquiries }) {
       <Text style={styles.sectionTitle}>Enquiries by Dealership</Text>
       <View style={styles.row}>
         <Cell flex={2.4} header>Dealership</Cell>
-        <Cell flex={1} header>PV</Cell>
-        <Cell flex={1} header>CV</Cell>
+        <Cell flex={1} header tint="pv">PV</Cell>
+        <Cell flex={1} header tint="cv">CV</Cell>
         <Cell flex={1.2} header>Total</Cell>
       </View>
       {rows.map((r) => (
         <View key={r.dealershipName} style={styles.row}>
           <Cell flex={2.4}>{r.dealershipName}</Cell>
-          <Cell flex={1}>{r.pv}</Cell>
-          <Cell flex={1}>{r.cv}</Cell>
+          <Cell flex={1} tint="pv">{r.pv}</Cell>
+          <Cell flex={1} tint="cv">{r.cv}</Cell>
           <Cell flex={1.2} bold>{r.total}</Cell>
         </View>
       ))}
       <View style={[styles.row, styles.totalRow]}>
-        <Cell flex={2.4} bold>Total</Cell>
-        <Cell flex={1} bold>{totals.pv}</Cell>
-        <Cell flex={1} bold>{totals.cv}</Cell>
-        <Cell flex={1.2} bold>{totals.total}</Cell>
+        <Cell flex={2.4} bold total>Total</Cell>
+        <Cell flex={1} bold total tint="pv">{totals.pv}</Cell>
+        <Cell flex={1} bold total tint="cv">{totals.cv}</Cell>
+        <Cell flex={1.2} bold total>{totals.total}</Cell>
       </View>
     </View>
   );
@@ -87,8 +104,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F3F4F6',
     justifyContent: 'center',
   },
-  headerCell: { backgroundColor: '#F9FAFB' },
+  headerCell: { backgroundColor: '#EFF6FF' },
+  totalCell: { backgroundColor: '#FFFBEB' },
+  pvCell: { backgroundColor: '#EFF6FF' },
+  cvCell: { backgroundColor: '#FFF7ED' },
   cellText: { fontSize: 12, color: '#374151' },
-  headerCellText: { fontWeight: '700', color: '#111827' },
+  headerCellText: { fontWeight: '700', color: '#1D4ED8' },
   boldCellText: { fontWeight: '700' },
+  totalCellText: { color: '#B45309' },
+  pvText: { color: '#1D4ED8' },
+  cvText: { color: '#C2410C' },
 });

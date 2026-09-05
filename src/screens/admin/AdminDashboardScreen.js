@@ -76,9 +76,9 @@ export default function AdminDashboardScreen() {
       {loading && enquiries.length === 0 ? <ActivityIndicator color="#1D4ED8" style={{ marginTop: 20 }} /> : null}
 
       <View style={styles.statsRow}>
-        <StatCard label="Total Enquiries" value={enquiries.length} />
-        <StatCard label="Dealerships" value={dealershipCount} />
-        <StatCard label="Users" value={userCount} />
+        <StatCard label="Total Enquiries" value={enquiries.length} tint="blue" />
+        <StatCard label="Dealerships" value={dealershipCount} tint="violet" />
+        <StatCard label="Users" value={userCount} tint="aqua" />
       </View>
 
       <TouchableOpacity style={styles.exportButton} onPress={handleExport} disabled={exporting}>

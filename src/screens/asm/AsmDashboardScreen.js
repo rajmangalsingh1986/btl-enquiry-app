@@ -73,8 +73,8 @@ export default function AsmDashboardScreen() {
       {loading && enquiries.length === 0 ? <ActivityIndicator color="#1D4ED8" style={{ marginTop: 20 }} /> : null}
 
       <View style={styles.statsRow}>
-        <StatCard label="Total Enquiries" value={enquiries.length} />
-        <StatCard label="Dealerships in Area" value={(user.dealershipNames || []).length} />
+        <StatCard label="Total Enquiries" value={enquiries.length} tint="blue" />
+        <StatCard label="Dealerships in Area" value={(user.dealershipNames || []).length} tint="violet" />
       </View>
 
       <TouchableOpacity style={styles.exportButton} onPress={handleExport} disabled={exporting}>

@@ -9,7 +9,9 @@ export default function BreakdownList({ title, entries }) {
       {entries.map(([label, count]) => (
         <View key={label} style={styles.breakdownRow}>
           <Text style={styles.breakdownLabel}>{label}</Text>
-          <Text style={styles.breakdownValue}>{count}</Text>
+          <View style={styles.badge}>
+            <Text style={styles.breakdownValue}>{count}</Text>
+          </View>
         </View>
       ))}
     </View>
@@ -34,5 +36,13 @@ const styles = StyleSheet.create({
     borderBottomColor: '#F3F4F6',
   },
   breakdownLabel: { fontSize: 13, color: '#374151' },
-  breakdownValue: { fontSize: 13, color: '#111827', fontWeight: '700' },
+  badge: {
+    backgroundColor: '#EFF6FF',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    minWidth: 28,
+    alignItems: 'center',
+  },
+  breakdownValue: { fontSize: 13, color: '#1D4ED8', fontWeight: '700' },
 });
