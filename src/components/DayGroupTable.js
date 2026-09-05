@@ -2,23 +2,25 @@ import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 
 // Groups enquiries by activity date (the day of the BTL activity, not when
-// it was captured in the app) and dealership, into a day x dealership grid.
-function buildMatrix(enquiries) {
+// it was captured in the app) and an arbitrary key (dealership, segment, ...)
+// into a day x group grid.
+function buildMatrix(enquiries, groupFn) {
   const dates = [...new Set(enquiries.map((e) => e.activityDate))].sort().reverse();
-  const dealerships = [...new Set(enquiries.map((e) => e.dealershipName))].sort();
+  const groups = [...new Set(enquiries.map(groupFn))].sort();
 
   const counts = {};
   for (const e of enquiries) {
+    const g = groupFn(e);
     counts[e.activityDate] = counts[e.activityDate] || {};
-    counts[e.activityDate][e.dealershipName] = (counts[e.activityDate][e.dealershipName] || 0) + 1;
+    counts[e.activityDate][g] = (counts[e.activityDate][g] || 0) + 1;
   }
 
-  const dealershipTotals = {};
-  for (const d of dealerships) {
-    dealershipTotals[d] = dates.reduce((sum, date) => sum + (counts[date]?.[d] || 0), 0);
+  const groupTotals = {};
+  for (const g of groups) {
+    groupTotals[g] = dates.reduce((sum, date) => sum + (counts[date]?.[g] || 0), 0);
   }
 
-  return { dates, dealerships, counts, dealershipTotals };
+  return { dates, groups, counts, groupTotals };
 }
 
 function Cell({ children, width, header, bold }) {
@@ -32,32 +34,31 @@ function Cell({ children, width, header, bold }) {
 }
 
 const DATE_COL_WIDTH = 96;
-const DEALERSHIP_COL_WIDTH = 110;
 
-export default function DayDealershipTable({ enquiries }) {
+export default function DayGroupTable({ enquiries, groupFn, title, groupColWidth = 110 }) {
   if (!enquiries.length) return null;
-  const { dates, dealerships, counts, dealershipTotals } = buildMatrix(enquiries);
+  const { dates, groups, counts, groupTotals } = buildMatrix(enquiries, groupFn);
 
   return (
     <View style={styles.card}>
-      <Text style={styles.sectionTitle}>Enquiry Flow by Day &amp; Dealership</Text>
+      <Text style={styles.sectionTitle}>{title}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator>
         <View>
           <View style={styles.row}>
             <Cell width={DATE_COL_WIDTH} header>Date</Cell>
-            {dealerships.map((d) => (
-              <Cell key={d} width={DEALERSHIP_COL_WIDTH} header>{d}</Cell>
+            {groups.map((g) => (
+              <Cell key={g} width={groupColWidth} header>{g}</Cell>
             ))}
             <Cell width={70} header>Total</Cell>
           </View>
 
           {dates.map((date) => {
-            const rowTotal = dealerships.reduce((sum, d) => sum + (counts[date]?.[d] || 0), 0);
+            const rowTotal = groups.reduce((sum, g) => sum + (counts[date]?.[g] || 0), 0);
             return (
               <View key={date} style={styles.row}>
                 <Cell width={DATE_COL_WIDTH}>{date}</Cell>
-                {dealerships.map((d) => (
-                  <Cell key={d} width={DEALERSHIP_COL_WIDTH}>{counts[date]?.[d] || 0}</Cell>
+                {groups.map((g) => (
+                  <Cell key={g} width={groupColWidth}>{counts[date]?.[g] || 0}</Cell>
                 ))}
                 <Cell width={70} bold>{rowTotal}</Cell>
               </View>
@@ -66,8 +67,8 @@ export default function DayDealershipTable({ enquiries }) {
 
           <View style={[styles.row, styles.totalRow]}>
             <Cell width={DATE_COL_WIDTH} bold>Total</Cell>
-            {dealerships.map((d) => (
-              <Cell key={d} width={DEALERSHIP_COL_WIDTH} bold>{dealershipTotals[d]}</Cell>
+            {groups.map((g) => (
+              <Cell key={g} width={groupColWidth} bold>{groupTotals[g]}</Cell>
             ))}
             <Cell width={70} bold>{enquiries.length}</Cell>
           </View>

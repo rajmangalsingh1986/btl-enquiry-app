@@ -9,8 +9,7 @@ import { countBy } from '../../utils/stats';
 import { enquiryToCsvRow } from '../../utils/enquiryCsv';
 import StatCard from '../../components/StatCard';
 import BreakdownList from '../../components/BreakdownList';
-import DayDealershipTable from '../../components/DayDealershipTable';
-import { STAGE_LABELS } from '../../constants/options';
+import DayGroupTable from '../../components/DayGroupTable';
 
 // Same shape as the Admin dashboard, but GET /enquiries here is already
 // scoped server-side to this ASM's assigned dealerships (their "area"),
@@ -62,7 +61,6 @@ export default function AsmDashboardScreen() {
     }
   };
 
-  const byStage = countBy(enquiries, (e) => STAGE_LABELS[e.stage] || e.stage);
   const byDealership = countBy(enquiries, (e) => e.dealershipName);
   const byAsmStatus = countBy(enquiries.filter((e) => e.stage === 'ASM_TAGGED'), (e) => e.asm?.status);
 
@@ -83,8 +81,18 @@ export default function AsmDashboardScreen() {
         {exporting ? <ActivityIndicator color="#fff" /> : <Text style={styles.exportButtonText}>Download All Enquiry Data (CSV)</Text>}
       </TouchableOpacity>
 
-      <DayDealershipTable enquiries={enquiries} />
-      <BreakdownList title="Enquiries by Stage" entries={byStage} />
+      <DayGroupTable
+        enquiries={enquiries}
+        groupFn={(e) => e.dealershipName}
+        title="Enquiry Flow by Day & Dealership"
+        groupColWidth={110}
+      />
+      <DayGroupTable
+        enquiries={enquiries}
+        groupFn={(e) => e.segment}
+        title="Enquiry Flow by Day & Segment"
+        groupColWidth={100}
+      />
       <BreakdownList title="Enquiries by Dealership" entries={byDealership} />
       <BreakdownList title="Closed Enquiries by Final Status" entries={byAsmStatus} />
     </ScrollView>
