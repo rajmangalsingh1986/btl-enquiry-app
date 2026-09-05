@@ -9,6 +9,7 @@ import { countBy } from '../../utils/stats';
 import { enquiryToCsvRow } from '../../utils/enquiryCsv';
 import StatCard from '../../components/StatCard';
 import BreakdownList from '../../components/BreakdownList';
+import DayDealershipTable from '../../components/DayDealershipTable';
 import { STAGE_LABELS } from '../../constants/options';
 
 // Same shape as the Admin dashboard, but GET /enquiries here is already
@@ -82,6 +83,7 @@ export default function AsmDashboardScreen() {
         {exporting ? <ActivityIndicator color="#fff" /> : <Text style={styles.exportButtonText}>Download All Enquiry Data (CSV)</Text>}
       </TouchableOpacity>
 
+      <DayDealershipTable enquiries={enquiries} />
       <BreakdownList title="Enquiries by Stage" entries={byStage} />
       <BreakdownList title="Enquiries by Dealership" entries={byDealership} />
       <BreakdownList title="Closed Enquiries by Final Status" entries={byAsmStatus} />
