@@ -9,6 +9,7 @@ import { enquiryToCsvRow } from '../../utils/enquiryCsv';
 import StatCard from '../../components/StatCard';
 import BreakdownList from '../../components/BreakdownList';
 import DayGroupTable from '../../components/DayGroupTable';
+import DealershipVehicleTypeTable from '../../components/DealershipVehicleTypeTable';
 
 export default function AdminDashboardScreen() {
   const [enquiries, setEnquiries] = useState([]);
@@ -64,7 +65,6 @@ export default function AdminDashboardScreen() {
     }
   };
 
-  const byDealership = countBy(enquiries, (e) => e.dealershipName);
   const byAsmStatus = countBy(enquiries.filter((e) => e.stage === 'ASM_TAGGED'), (e) => e.asm?.status);
 
   return (
@@ -97,7 +97,7 @@ export default function AdminDashboardScreen() {
         title="Enquiry Flow by Day & Segment"
         groupColWidth={100}
       />
-      <BreakdownList title="Enquiries by Dealership" entries={byDealership} />
+      <DealershipVehicleTypeTable enquiries={enquiries} />
       <BreakdownList title="Closed Enquiries by Final Status" entries={byAsmStatus} />
     </ScrollView>
   );
